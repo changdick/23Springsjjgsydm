@@ -7,62 +7,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 int kmpcore(char* s, char*t, int next[]){
-    int index = 0, i = 0, j = 0;  //定义三个变量，index是待会匹配到的成功位置首位坐标，如果匹配失败就得更新它。i是主串上游标，j是子串上游标
+    int index = 0, i = 0, j = 0;  
     while(s[i]!='\0' && t[j]!='\0'){
-        //循环比较，循环条件是主串和子串都没有比到结束。如果比到结尾了就说明比较结束（可能成功也可能失败），应该结束循环并返回
-        //下面写主体，写循环就抽象到自己正处于循环中间的某一次。首先是比对的情况：如果比较成功，就同时比下一个
         if(s[i] == t[j]){
-            //比较成功，两个串的游标都往下走，进行下一轮
             i++;
             j++;
         }
         else{
-            //其他情况，就是比较不成功发生在了j位上
-
-            //首先要更新index，index的新值实际上是待会t[0]所对应的新值，所以用index = i - j (在j更新后做)更好
-            // index = index + j - next[j]; 老师ppt的，我们不用了，太晦涩
-
-            //现在要让j更新成next[j]，下一次比较由新的j位来比。但他如果是-1，就表示主串上的i要往下走一位，与子串0号位开始继续比。所以还要判断
             if(next[j]==-1){
-                i++;       //next[j]为-1的情形，说明主串下移，模式串从0开始
+                i++;    
                 j = 0;
-                index = i;  //这里j 直接从0开始，i也已经往下移动一位完了，直接index就是i，新的起点
+                index = i;  
             }
             else{
-                //失败情况且next不是-1, 即更新j为next[j]，说明下一轮i不动，直接拿next[j]上去比
                 j = next[j];
 
-                index = i - j;  //j是j游标自己关于t[0]的偏移量，减了j就知道t[0]对应几号位置了
+                index = i - j;  
             }
 
         }
 
     }
-    //至此while循环结束了，然后我们目前尚不知道匹配是否成功，所以做判断。我们不知道while是因为谁走完了而退出的，但我们只需判断t[j]是否走到结尾就知道匹配是否成功。
     if(t[j] == '\0'){
-        return index;    //当t[j]结尾说明匹配成功，此时index就储存着子串出现在主串中的位置
+        return index;  
     }
     else
-        return -1;        //失败的情况，但是注意不能返回0，因为0虽然表示false，但在这里int型 0值是有效的index返回值,只能拿-1来标记匹配失败
+        return -1;  
 }
-void getnext(char * t, int next[]){
-    //Step 1  首先要有两个“探头”
+void getnextI(char * t, int next[]){
     int k = -1, j = 0;
-
-    //Step 2 在进入循环前，先完成一个基础情况来启动循环
-    next[j] = -1;     //这个基础情况先写，也是作为循环的一个启动
-
-    //Step 3 写循环过程，这个过程里就关注是“某一次”，关注动态的过程
-        //1. 首先，循环条件是什么？是next写完就结束了，也就是j走到结尾。
+    next[j] = -1; 
      while(t[j]!='\0'){
-        //2. 上来我们会拥有j和k两个探头，他们在某个位置（别管具体在哪）,并且上一轮任务刚完成，j和k就在那，我们现在要先比一下，看是否满足下一次写入的条件
-        //注：下一次写入的条件就是来自上面的2, 如果j位置和k位置的值一样，说明`next[0]到next[k]`和`next[j-k]`到`next[j]`完全一样，则可以写入j下一位的next值
-        //在要考虑，当k的值可能是-1，因为我们初始值设的-1，否则不能启动循环
         if(k == -1 || t[j] == t[k]){
-           //满足j和k位置相等的情况，此时j的下一位的next可以写入。j和k位相等，++j和++k后，此时的j位置若不匹配就拿k位置来匹配，故next[j] = k
-            next[++j] = ++k;
+            j++;
+            k++;
+            next[j] = k;
         }
-        //如果不满足的情况，此时k位置不满足可写入条件，那就去上一个可能满足的地方，其实就是next[k]
+        else{
+            k = next[k];
+        }
+     }
+}
+void getnextII(char * t, int next[]){
+    int k = -1, j = 0;
+    next[j] = -1; 
+     while(t[j]!='\0'){
+        if(k == -1 || t[j] == t[k]){
+            j++;
+            k++;
+            if(t[j]!=t[k])
+                next[j] = k;
+            else
+                next[j] = next[k];
+        }
         else{
             k = next[k];
         }
@@ -70,7 +67,7 @@ void getnext(char * t, int next[]){
 }
 int kmp(char*s, char*t){
     char next[100];
-    getnext(t,next);
+    getnextI(t,next);   //或 getnextII(t, next);
     int ret = kmpcore(s,t,next);
     return ret;
 }
