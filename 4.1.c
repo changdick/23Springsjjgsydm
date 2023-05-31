@@ -12,8 +12,15 @@ int checkIfRateAvailable(double x, double y, int t, double rate) {
 }
 
 double searchProperRate(double x, double y, int t) {
+    double rate = 10;
+    while(rate){
+        if(checkIfRateAvailable(x,y,t,rate)){
+            return rate;
+        }
+        rate -= 0.00001;
 
-    return 0;
+    }
+	return 0;
 }
 
 
